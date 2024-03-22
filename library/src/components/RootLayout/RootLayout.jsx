@@ -8,7 +8,7 @@ function RootLayout({ children }) {
 
     const handelBackgroungClick = (e) => {
         e.stopPropagation() ;
-        setShow(() => true);
+        setShow(() => false);
     }
     return (
         <>

@@ -30,15 +30,17 @@ function RootHeader() {
             return config;
         });
         queryClient.invalidateQueries("principalQuery");
+        window.location.replace("/auth/signin");
     }
 
-    const handleOpenMenuClick = () => {
+    const handleOpenMenuClick = (e) => {
+        e.stopPropagation();
         setShow(() => true);
     }
 
     return (
         <div css={s.header}>
-            <button css={s.menuButton} onClick={handleOpenMenuClick}>
+            <button css={s.menuButton} onClick={(e)=>handleOpenMenuClick(e)}>
                 <HiMenu />
             </button>
             {

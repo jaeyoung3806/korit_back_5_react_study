@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
+import * as s from "./style";
 import { Link } from "react-router-dom";
 import { useInput } from "../../hooks/useInput";
-import * as s from "./style";
 import AuthPageInput from "../../components/AuthPageInput/AuthPageInput";
 import RightTopButton from "../../components/RightTopButton/RightTopButton";
 import { signinRequest } from "../../apis/api/signin";
@@ -23,7 +23,7 @@ function SigninPage(props) {
         }).catch(error => {
             alert(error.response.data);
         })
-    }
+    }   
     return (
         <div>
             <div css={s.header}>
@@ -35,9 +35,9 @@ function SigninPage(props) {
             <AuthPageInput type={"password"} name={"password"} placeholder={"비밀번호"} value={password} onChange={passwordChange} />
             <Link to={"/auth/signup"}>회원가입</Link>
             <div>
-                <Link>카카오로그인</Link>
-                <Link>구글로그인</Link>
-                <Link>네이버로그인</Link>
+                <a href="http://localhost:8080/oauth2/authorization/kakao">카카오로그인</a>
+                <a href="http://localhost:8080/oauth2/authorization/google">구글로그인</a>
+                <a href="http://localhost:8080/oauth2/authorization/naver">네이버로그인</a>
             </div>
         </div>
     );

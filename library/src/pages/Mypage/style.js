@@ -56,14 +56,13 @@ export const emailBox = css`
     align-items: center;
     margin-bottom: 10px;
 
-    & > div {
-        margin: 0;
+    & > div:nth-of-type(1) {
+        margin: 0px 10px 0px 0px;
     }
 `;
 
 export const infoButton = css`
     box-sizing: border-box;
-    margin-left: 10px;
     border: 1px solid #dbdbdb;
     border-radius: 3px;
     padding: 5px;
@@ -79,10 +78,30 @@ export const infoButton = css`
     }
 `;
 
+export const emailCheck = css`
+    display: flex;
+    align-items: center;    
+
+    & > * {
+        color: #008734;
+    }
+`;
+
 export const infoBox = css`
     box-sizing: border-box;
     margin-left: 30px;
     padding-top: 30px;
+`;
+
+export const infoButtons = css`
+    display: flex;
+    box-sizing: border-box;
+    padding-top: 5px;
+
+    & > button:nth-of-type(1) {
+        margin-right: 5px;
+
+    }
 `;
 
 export const bottom = css`
