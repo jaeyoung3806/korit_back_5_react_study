@@ -61,7 +61,7 @@ export const imageBox = css`
     height: 100%;
     overflow: hidden;
 
-    & > img {
+    & img {
         height: 150px;
     }
 `;
@@ -73,7 +73,7 @@ export const imgUrl = css`
 
 export const imgURLBox = css`
     display: inline-block;
-    width: 94%;
+    width: 95%;
     line-height: 10px;
 `
 export const imgAddButon = css`

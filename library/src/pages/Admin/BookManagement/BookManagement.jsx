@@ -12,6 +12,7 @@ import { storage } from "../../../apis/firebase/config/firebaseConfig";
 import {v4 as uuid} from "uuid"
 import RightTopButton from "../../../components/RightTopButton/RightTopButton";
 import { registerBook } from "../../../apis/api/bookApi";
+import AdminBookSearch from "../../../components/AdminBookSearch/AdminBookSearch";
 
 function BookManagement(props) {
     const [ bookTypeOptions, setBookTypeOptions ] = useState([]);
@@ -80,7 +81,7 @@ function BookManagement(props) {
     const submit = () => {
         registerBookMutation.mutate({
             isbn: isbn.value,
-            bookTypeId: bookId.value,
+            bookTypeId: bookTypeId.value,
             categoryId: CategoryId.value,
             bookName: bookName.value,
             authorName: authorName.value,
@@ -242,8 +243,8 @@ function BookManagement(props) {
                                             onKeyDown={imgUrl.handleOnKeyDown}
                                         />
                                     </span>
-                                    <input t
-                                        ype="file" 
+                                    <input 
+                                        type="file" 
                                         style={{
                                             display: "none"
                                         }}
@@ -258,8 +259,12 @@ function BookManagement(props) {
                         </tr>
                     </tbody>
                 </table>
-                <div></div>
             </div>
+            <AdminBookSearch 
+                selectStyle={selectStyle}
+                bookTypeOptions={bookTypeOptions}
+                categoryOptions={categoryOptions}
+            />
         </div>
     );
 }
