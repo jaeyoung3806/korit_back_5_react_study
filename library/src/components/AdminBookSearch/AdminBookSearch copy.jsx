@@ -6,21 +6,14 @@ import { useReactSelect } from "../../hooks/useReactSelect";
 import { getBookCountRequest, searchBooksRequest } from "../../apis/api/bookApi";
 import { useQuery } from "react-query";
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AdminBookSearchPageNumbers from "../AdminBookSearchPageNumbers/AdminBookSearchPageNumbers";
-import { useRecoilState } from "recoil";
-import { selectedBookState } from "../../atoms/adminSelectedBookAtom";
 
 
 function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
     const [ searchParams, setSearchParams ] = useSearchParams();
     const searchCount = 20;
     const [ bookList, setBookList ] = useState([]);
-    const [ checkAll, setCheckAll ] = useState({
-        checked: false,
-        target: 1   // 1 => 전체선택, 2 => 부분 선택
-    });
-    const [ selectedBook, setSelectedBook ] = useRecoilState(selectedBookState); 
 
     const searchBooksQuery = useQuery(
         ["searchBooksQuery", searchParams.get("page")],
@@ -91,71 +84,10 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
             boxShadow: "none"
         })
     }
-    
-    useEffect(() => {
-        if(checkAll.target === 1) {
-            setBookList(() => 
-                bookList.map(book =>{
-                    return {
-                        ...book,
-                        checked: checkAll.checked
-                    }
-                })
-            );
-        }
-    }, [checkAll.checked])
-    
-    const handleCheckAllChange = (e) => {
-        setCheckAll(() => {
-            return {
-                checked: e.target.checked,
-                target: 1
-            }
-        });
-    }
-
-    useEffect(() => {
-        const findCount = bookList.filter(book => book.checked === false).length;
-        if(findCount === 0) {
-            setCheckAll(() => {
-                return {
-                    checked: true,
-                    target: 2
-                }
-            });
-        } else {
-            setCheckAll(() => {
-                return {
-                    checked: false,
-                    target: 2
-                }
-            });
-        }
-    }, [bookList])
-
-    useEffect(() => {
-        let lastSeletedBook = {...selectedBook};
-        for(let book of bookList) {
-            if(book.checked === true) {
-                lastSeletedBook = book;
-            }
-        }
-        setSelectedBook(() => lastSeletedBook);
-    }, [bookList])
 
     const handleCheckOnChange = (e) => {
-        const bookId = parseInt(e.target.value);
-        setBookList(() => 
-            bookList.map(book => {
-                if(book.bookId === bookId) {
-                    return {
-                        ...book,
-                        checked: e.target.checked
-                    }
-                }
-                return book;
-            })
-        )
+        const bookId = e.target.value;
+        bookList
     }
 
     return (
@@ -195,7 +127,7 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
                 <table css={s.table}>
                     <thead>
                         <tr css={s.theadTr}>
-                            <th><input type="checkbox" checked={checkAll.checked} onChange={handleCheckAllChange}/></th>
+                            <th><input type="checkbox" /></th>
                             <th>코드번호</th>
                             <th>도서명</th>
                             <th>저자명</th>
@@ -209,9 +141,9 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
                     <tbody>
                         {
                             bookList.map(
-                                book =>
+                                (book, index) =>
                                 <tr key={book.bookId}>
-                                    <td><input type="checkbox" value={book.bookId} checked={book.checked} onChange={handleCheckOnChange} /></td>
+                                    <td><input type="checkbox" valule={book.bookId}  onChange={null} /></td>
                                     <td>{book.bookId}</td>
                                     <td>{book.bookName}</td>
                                     <td>{book.authorName}</td>
