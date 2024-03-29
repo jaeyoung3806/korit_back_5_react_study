@@ -1,5 +1,5 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from 'react';
-import { input } from '../AuthPageInput/style';
 import { css } from '@emotion/react';
 
 const inputBox = css`
@@ -9,10 +9,13 @@ const inputBox = css`
     padding: 0px 10px;
     height: 100%;
     width: 100%;
+    &:disabled {
+        background-color: white;
+    }
 `;
 
 
-function BookRegisterInput({ value, onChange, onKeyDown, bookref }) {
+function BookRegisterInput({ value, onChange, onKeyDown, bookref, isDisabled }) {
 
     return (
         <input 
@@ -22,6 +25,7 @@ function BookRegisterInput({ value, onChange, onKeyDown, bookref }) {
             onChange={onChange}
             onKeyDown={onKeyDown}
             ref={bookref}
+            disabled={isDisabled}
             />
     );
 }

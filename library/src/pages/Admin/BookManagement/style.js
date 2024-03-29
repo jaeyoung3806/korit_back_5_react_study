@@ -47,7 +47,7 @@ export const registerTh = css`
     cursor: default;
 `;
 
-export const priview = css`
+export const preview = css`
     box-sizing: border-box;
     width: 140px;
 `;

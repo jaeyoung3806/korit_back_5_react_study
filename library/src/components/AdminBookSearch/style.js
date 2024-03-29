@@ -53,6 +53,7 @@ export const tableLayout = css`
 export const table = css`
     border-collapse: collapse;
     width: max-content;
+    
     & td, & th {
         border: 1px solid #dbdbdb;
         padding: 0px 5px;

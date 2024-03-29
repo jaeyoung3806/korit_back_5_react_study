@@ -14,5 +14,4 @@ export const selectedBookState = atom({
         publisherName: "",
         coverImgUrl: ""
     }
-
-})
+});

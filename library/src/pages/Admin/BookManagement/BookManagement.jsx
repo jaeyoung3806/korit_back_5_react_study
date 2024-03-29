@@ -11,7 +11,7 @@ import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { storage } from "../../../apis/firebase/config/firebaseConfig";
 import {v4 as uuid} from "uuid"
 import RightTopButton from "../../../components/RightTopButton/RightTopButton";
-import { registerBook } from "../../../apis/api/bookApi";
+import { registerBook, updateBookRequest } from "../../../apis/api/bookApi";
 import AdminBookSearch from "../../../components/AdminBookSearch/AdminBookSearch";
 import { useRecoilState } from "recoil";
 import { selectedBookState } from "../../../atoms/adminSelectedBookAtom";
@@ -19,6 +19,8 @@ import { selectedBookState } from "../../../atoms/adminSelectedBookAtom";
 function BookManagement(props) {
     const [ bookTypeOptions, setBookTypeOptions ] = useState([]);
     const [ categoryOptions, setCategoryOptions ] = useState([]);
+    const [ actionStatus, setActionStatus ] = useState(0); //1=추가, 2=수정, 3=삭제
+    const [ isDeleate, setDelete ] = useState(false);
     const fileRef = useRef();
     const inputRefs = [
         useRef(),   // 0 bookId
@@ -30,11 +32,7 @@ function BookManagement(props) {
         useRef(),   // 6 출판사
         useRef()    // 7 URL
     ];
-    
-    const nextInput = (ref) => {
-        ref.current.focus();
-    }
-
+   
     const BookTypeQuery = useQuery(
         ["bookTypeQuery"],
         getAllBookTypeRequest,  
@@ -73,23 +71,67 @@ function BookManagement(props) {
         mutationKey: "registerBookMutation",
         mutationFn: registerBook,
         onSuccess: response => {
-
+            alert("추가완료.");
+            window.location.replace("/admin/book/management?page=1");
         },
         onError: error => {
 
         }
     });
 
+    const updateBookMutation = useMutation({
+        mutationKey: "updateBookMutation",
+        mutationFn: updateBookRequest,
+        onSuccess: response => {
+            alert("수정완료.");
+            window.location.reload();
+        }
+    });
+     
+    const nextInput = (ref) => {
+        ref.current.focus();
+    }
+
+
     const submit = () => {
-        registerBookMutation.mutate({
-            isbn: isbn.value,
-            bookTypeId: bookTypeId.value,
-            categoryId: categoryId.value,
-            bookName: bookName.value,
-            authorName: authorName.value,
-            publisherName: publisherName.value,
-            coverImgUrl: imgUrl.value
-        })
+        if(actionStatus === 1) {
+
+            registerBookMutation.mutate({
+                isbn: isbn.value,
+                bookTypeId: bookTypeId.value.value,
+                categoryId: categoryId.value.value,
+                bookName: bookName.value,
+                authorName: authorName.value,
+                publisherName: publisherName.value,
+                coverImgUrl: imgUrl.value
+            });
+        } else if(actionStatus === 2) {
+            updateBookMutation.mutate({
+                bookId: bookId.value,
+                isbn: isbn.value,
+                bookTypeId: bookTypeId.value.value,
+                categoryId: categoryId.value.value,
+                bookName: bookName.value,
+                authorName: authorName.value,
+                publisherName: publisherName.value,
+                coverImgUrl: imgUrl.value
+            })
+        } else if(actionStatus === 3) {
+            setDelete(() => true);
+        }
+        cancle();
+    }
+
+    const cancle = () => {
+        bookId.setValue(() => 0);
+        isbn.setValue(() => "");
+        bookTypeId.setValue(() => null);
+        categoryId.setValue(() => null);
+        bookName.setValue(() => "");
+        authorName.setValue(() => "");
+        publisherName.setValue(() => "");
+        imgUrl.setValue(() => "");
+        setActionStatus(() => 0);
     }
 
     const bookId = useBookRegisterInput(nextInput, inputRefs[1]);
@@ -100,19 +142,17 @@ function BookManagement(props) {
     const authorName = useBookRegisterInput(nextInput, inputRefs[6]);
     const publisherName = useBookRegisterInput(nextInput, inputRefs[7]);
     const imgUrl = useBookRegisterInput(submit);
-
-
     const [ selectedBook ] = useRecoilState(selectedBookState);
+
     useEffect(() => {
         bookId.setValue(() => selectedBook.bookId);
-        isbn.setValue(() => selectedBook.isbn);
+        isbn.setValue(() => selectedBook.isbn); 
         bookTypeId.setValue(() => ({value: selectedBook.bookTypeId, label: selectedBook.bookTypeName}));
         categoryId.setValue(() => ({value: selectedBook.categoryId, label: selectedBook.categoryName}));
         bookName.setValue(() => selectedBook.bookName);
         authorName.setValue(() => selectedBook.authorName);
         publisherName.setValue(() => selectedBook.publisherName);
         imgUrl.setValue(() => selectedBook.imgUrl);
-        
     }, [selectedBook]);
 
     const selectStyle = {
@@ -125,6 +165,7 @@ function BookManagement(props) {
         })
     }
 
+    
     const handleFileChange = (e) => {
         
         const files = Array.from(e.target.files);
@@ -160,7 +201,22 @@ function BookManagement(props) {
         <div css={s.layout}>
             <div css={s.header}>
                 <h1>도서 관리</h1>
-                <RightTopButton onClick={submit}>확인</RightTopButton>
+                <div>
+                    {
+                        actionStatus === 0
+                        ? 
+                        <>
+                            <RightTopButton onClick={()=> setActionStatus(1)}>추가</RightTopButton>
+                            <RightTopButton onClick={()=> setActionStatus(2)}>수정</RightTopButton>
+                            <RightTopButton onClick={()=> setActionStatus(3)}>삭제</RightTopButton>
+                        </> 
+                        :
+                        <>
+                            <RightTopButton onClick={submit}>확인</RightTopButton>
+                            <RightTopButton onClick={cancle}>취소</RightTopButton>
+                        </>
+                    }
+                </div>
             </div>
             <div css={s.topLayout}>
                 <table css={s.registerTable}>
@@ -173,6 +229,7 @@ function BookManagement(props) {
                                     bookref={inputRefs[0]}
                                     onChange={bookId.handleOnChange}
                                     onKeyDown={bookId.handleOnKeyDown}
+                                    isDisabled={true}
                                 />
                             </td>
                             <th css={s.registerTh}>ISBN</th>
@@ -182,13 +239,15 @@ function BookManagement(props) {
                                     bookref={inputRefs[1]}
                                     onChange={isbn.handleOnChange}
                                     onKeyDown={isbn.handleOnKeyDown}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
-                            <td rowSpan={6} css={s.priview}>
+                            <td rowSpan={5} css={s.preview}>
                                 <div css={s.imageBox}>
-                                    <img src={!!imgUrl.value 
-                                    ? "https://www.google.com/imgres?imgurl=https%3A%2F%2Fmedia.istockphoto.com%2Fid%2F1396814518%2Fvector%2Fimage-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg%3Fs%3D612x612%26w%3D0%26k%3D20%26c%3Dhnh2OZgQGhf0b4"
-                                    : imgUrl.value
+                                    <img src={
+                                        ! imgUrl.value 
+                                        ? "https://www.shutterstock.com/image-vector/no-image-available-picture-coming-600nw-2057829641.jpg"
+                                        : imgUrl.value
                                     } alt="" />
                                 </div>
                             </td>
@@ -200,9 +259,11 @@ function BookManagement(props) {
                                 <Select 
                                     styles={selectStyle} 
                                     options={bookTypeOptions}
+                                    value={bookTypeId.value}
                                     onKeyDown={bookTypeId.handleOnKeyDown}
                                     onChange={bookTypeId.handleOnChange}
                                     ref={inputRefs[2]}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
                             <th css={s.registerTh}>카테고리</th>
@@ -210,9 +271,11 @@ function BookManagement(props) {
                                 <Select 
                                     styles={selectStyle} 
                                     options={categoryOptions}
+                                    value={categoryId.value}
                                     onKeyDown={categoryId.handleOnKeyDown}
                                     onChange={categoryId.handleOnChange}
                                     ref={inputRefs[3]}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
                         </tr>
@@ -224,6 +287,7 @@ function BookManagement(props) {
                                     bookref={inputRefs[4]}
                                     onChange={bookName.handleOnChange}
                                     onKeyDown={bookName.handleOnKeyDown}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
                         </tr>
@@ -235,6 +299,7 @@ function BookManagement(props) {
                                     bookref={inputRefs[5]}
                                     onChange={authorName.handleOnChange}
                                     onKeyDown={authorName.handleOnKeyDown}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
                             <th css={s.registerTh}>출판사</th>
@@ -244,6 +309,7 @@ function BookManagement(props) {
                                     bookref={inputRefs[6]}
                                     onChange={publisherName.handleOnChange}
                                     onKeyDown={publisherName.handleOnKeyDown}
+                                    isDisabled={![1, 2].includes(actionStatus)}
                                 />
                             </td>
                         </tr>
@@ -257,6 +323,7 @@ function BookManagement(props) {
                                             bookref={inputRefs[7]}
                                             onChange={imgUrl.handleOnChange}
                                             onKeyDown={imgUrl.handleOnKeyDown}
+                                            isDisabled={![1, 2].includes(actionStatus)}
                                         />
                                     </span>
                                     <input 
@@ -267,7 +334,7 @@ function BookManagement(props) {
                                         onChange={handleFileChange}
                                         ref={fileRef} 
                                         />
-                                    <button css={s.imgAddButon} onClick={() => fileRef.current.click()}>
+                                    <button css={s.imgAddButon} disabled={![1,2].includes(actionStatus)} onClick={() => fileRef.current.click()}>
                                         <CiSquarePlus />
                                     </button>
                                 </div>
@@ -280,6 +347,8 @@ function BookManagement(props) {
                 selectStyle={selectStyle}
                 bookTypeOptions={bookTypeOptions}
                 categoryOptions={categoryOptions}
+                isDelete={isDeleate}
+                setDelete={setDelete}
             />
         </div>
     );

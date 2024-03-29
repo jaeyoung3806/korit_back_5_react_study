@@ -3,8 +3,8 @@ import Select from "react-select";
 import * as s from "./style";
 import { useBookRegisterInput } from "../../hooks/useBookRegisterInput";
 import { useReactSelect } from "../../hooks/useReactSelect";
-import { getBookCountRequest, searchBooksRequest } from "../../apis/api/bookApi";
-import { useQuery } from "react-query";
+import { deleteBooksRequest, getBookCountRequest, searchBooksRequest } from "../../apis/api/bookApi";
+import { useMutation, useQuery } from "react-query";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AdminBookSearchPageNumbers from "../AdminBookSearchPageNumbers/AdminBookSearchPageNumbers";
@@ -12,7 +12,7 @@ import { useRecoilState } from "recoil";
 import { selectedBookState } from "../../atoms/adminSelectedBookAtom";
 
 
-function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
+function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions, isDelete, setDelete }) {
     const [ searchParams, setSearchParams ] = useSearchParams();
     const searchCount = 20;
     const [ bookList, setBookList ] = useState([]);
@@ -21,7 +21,8 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
         target: 1   // 1 => 전체선택, 2 => 부분 선택
     });
     const [ selectedBook, setSelectedBook ] = useRecoilState(selectedBookState); 
-
+    const [ lastCheckBookId, setLastCheckBookId ] = useState(0);
+    
     const searchBooksQuery = useQuery(
         ["searchBooksQuery", searchParams.get("page")],
         async () => await searchBooksRequest({
@@ -59,6 +60,23 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
             onSuccess: response => {}
         }
     );
+
+    const deleteBooksMutation = useMutation({
+        mutationKey: "deleteBooksMutation",
+        mutationFn: deleteBooksRequest,
+        onSuccess: response => {
+            alert("삭제완료.");
+            window.location.replace("/admin/book/management?page=1");
+        }
+    })
+
+    useEffect(() => {
+        if(isDelete) {
+            const deleteBooks = bookList.filter(book => book.checked).map(book => book.bookId);
+            deleteBooksMutation.mutate(deleteBooks);
+        }
+        setDelete(() => false);
+    }, [isDelete])
 
     const searchSubmit = () => {
         setSearchParams({
@@ -134,13 +152,34 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
     }, [bookList])
 
     useEffect(() => {
-        let lastSeletedBook = {...selectedBook};
-        for(let book of bookList) {
-            if(book.checked === true) {
-                lastSeletedBook = book;
-            }
+        let lastSelectedBook = {...selectedBook};
+        let checkStatus = false;
+        lastSelectedBook = bookList.filter(book => book.bookId === lastCheckBookId && book.checked)[0];
+        if(!!lastSelectedBook) {
+            checkStatus = true;
         }
-        setSelectedBook(() => lastSeletedBook);
+        // for(let book of bookList) {
+        //     if(book.checked === true) {
+        //         lastSeletedBook = book;
+        //         checkStatus = true;
+        //     }
+        // }
+        if(!checkStatus) {
+            setSelectedBook(() => ({
+                bookId: 0,
+                isbn: "",
+                bookTypeId: 0,
+                bookTypeName: "",
+                categoryId: 0,
+                categoryName: "",
+                bookName: "",
+                authorName: "",
+                publisherName: "",
+                coverImgUrl: ""
+            }));
+        } else {
+            setSelectedBook(() => lastSelectedBook);
+        }
     }, [bookList])
 
     const handleCheckOnChange = (e) => {
@@ -156,6 +195,7 @@ function AdminBookSearch({  selectStyle, bookTypeOptions, categoryOptions }) {
                 return book;
             })
         )
+        setLastCheckBookId(() => bookId);
     }
 
     return (
